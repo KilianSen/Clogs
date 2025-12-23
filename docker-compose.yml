@@ -1,0 +1,25 @@
+services:
+    agent:
+        image: ghcr.io/kiliansen/clogs-agent:latest
+        volumes:
+            # Mount the Docker socket to allow the agent to monitor Docker events
+            - /var/run/docker.sock:/var/run/docker.sock:ro
+        environment:
+            - CLOGS_BACKEND_URL=http://server:8000
+        restart: unless-stopped
+        depends_on:
+            -  server
+
+    server:
+        image: ghcr.io/kiliansen/clogs-server:latest
+        ports:
+            - "8000:8000"
+
+    web:
+        image: ghcr.io/kiliansen/clogs-web:latest
+        ports:
+            - "8080:5173"
+        environment:
+            - CLOGS_BACKEND_URL=http://server:8000
+        depends_on:
+            -  server

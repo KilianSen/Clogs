@@ -1,0 +1,41 @@
+name: Update Component Versions
+
+on:
+  workflow_dispatch:
+  repository_dispatch:
+    types: [component-update]
+  schedule:
+    - cron: '0 0 * * 1' # Run every Monday at midnight
+
+jobs:
+  update-versions:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pull-requests: write
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.x'
+
+      - name: Run Update Script
+        run: python scripts/update_versions.py
+
+      - name: Create Pull Request
+        uses: peter-evans/create-pull-request@v6
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          commit-message: "chore: update component versions"
+          title: "chore: update component versions"
+          body: |
+            Automated update of component versions in `versions.env`.
+            
+            This PR updates the pinned versions of Frontend, Backend, and Agents to their latest releases/tags.
+          branch: update-versions
+          base: main
+          delete-branch: true

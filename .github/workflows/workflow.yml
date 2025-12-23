@@ -1,0 +1,172 @@
+name: Build and Push Docker Images
+
+on:
+  push:
+    branches: [ "main" ]
+    tags: [ "v*" ]
+  workflow_dispatch:
+    inputs:
+      frontend_version:
+        description: 'Frontend Version (tag/branch/sha)'
+        required: false
+        default: ''
+      backend_version:
+        description: 'Backend Version (tag/branch/sha)'
+        required: false
+        default: ''
+      agents_version:
+        description: 'Agents Version (tag/branch/sha)'
+        required: false
+        default: ''
+
+env:
+  REGISTRY: ghcr.io
+  # Replace with your actual image name (e.g., username/toolname)
+  IMAGE_NAME: ${{ github.repository }}
+
+jobs:
+  build-and-push:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+
+    steps:
+      # 1. Checkout the Main Repo (contains the Dockerfile)
+      - name: Checkout Main Repo (Dockerfile)
+        uses: actions/checkout@v6
+
+      # 1.1 Determine Versions
+      - name: Determine Versions
+        id: versions
+        run: |
+          # Load defaults from file
+          if [ -f versions.env ]; then
+            # Read the file line by line to avoid issues with source on some shells
+            while IFS='=' read -r key value; do
+              if [[ $key != \#* && -n $key ]]; then
+                echo "$key=$value" >> $GITHUB_ENV
+              fi
+            done < versions.env
+          fi
+          
+          # Override with inputs if provided (workflow_dispatch)
+          if [ -n "${{ inputs.frontend_version }}" ]; then
+            echo "FRONTEND_VERSION=${{ inputs.frontend_version }}" >> $GITHUB_ENV
+          fi
+          if [ -n "${{ inputs.backend_version }}" ]; then
+            echo "BACKEND_VERSION=${{ inputs.backend_version }}" >> $GITHUB_ENV
+          fi
+          if [ -n "${{ inputs.agents_version }}" ]; then
+            echo "AGENTS_VERSION=${{ inputs.agents_version }}" >> $GITHUB_ENV
+          fi
+
+      # 2. Checkout the Frontend Repo into ./frontend
+      - name: Checkout Frontend
+        uses: actions/checkout@v6
+        with:
+          repository: kiliansen/clogsweb
+          path: frontend
+          ref: ${{ env.FRONTEND_VERSION }}
+          token: ${{ secrets.GITHUB_TOKEN }} # Or a PAT if repos are private
+
+      # 3. Checkout the Backend Repo into ./backend
+      - name: Checkout Backend
+        uses: actions/checkout@v6
+        with:
+          repository: kiliansen/clogsserver
+          path: backend
+          ref: ${{ env.BACKEND_VERSION }}
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      # 4. Checkout the Agents Repo into ./agents
+      - name: Checkout Agents
+        uses: actions/checkout@v6
+        with:
+          repository: kiliansen/clogsagent
+          path: agents
+          ref: ${{ env.AGENTS_VERSION }}
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      # 5. Extract Version
+      - name: Extract Version
+        id: version
+        run: |
+          if [[ $GITHUB_REF == refs/tags/* ]]; then
+            VERSION=${GITHUB_REF#refs/tags/}
+            VERSION=${VERSION#v}
+            echo "VERSION=$VERSION" >> $GITHUB_ENV
+          else
+            echo "VERSION=latest" >> $GITHUB_ENV
+          fi
+
+      # 6. Log in to the Container Registry
+      - name: Log in to the Container registry
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      # 7. Build and Push: Frontend Only (f)
+      - name: Build Frontend Image
+        run: |
+          TAG="${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:f-${{ env.VERSION }}"
+          docker build \
+            --target frontend_only \
+            -t $TAG .
+          docker push $TAG
+
+      # 8. Build and Push: Backend Only (b)
+      - name: Build Backend Image
+        run: |
+          TAG="${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:b-${{ env.VERSION }}"
+          docker build \
+            --target backend_only \
+            -t $TAG .
+          docker push $TAG
+
+      # 9. Build and Push: Agents Only (a)
+      - name: Build Agents Image
+        run: |
+          TAG="${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:a-${{ env.VERSION }}"
+          docker build \
+            --target agents_only \
+            -t $TAG .
+          docker push $TAG
+
+      # 10. Build and Push: Frontend + Backend (f+b)
+      - name: Build Frontend+Backend Image
+        run: |
+          TAG="${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:f+b-${{ env.VERSION }}"
+          docker build \
+            --target frontend_backend \
+            -t $TAG .
+          docker push $TAG
+
+      # 11. Build and Push: Frontend + Agents (f+a)
+      - name: Build Frontend+Agents Image
+        run: |
+          TAG="${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:f+a-${{ env.VERSION }}"
+          docker build \
+            --target frontend_agents \
+            -t $TAG .
+          docker push $TAG
+
+      # 12. Build and Push: Backend + Agents (b+a)
+      - name: Build Backend+Agents Image
+        run: |
+          TAG="${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:b+a-${{ env.VERSION }}"
+          docker build \
+            --target backend_agents \
+            -t $TAG .
+          docker push $TAG
+
+      # 13. Build and Push: Full Tool (f+b+a)
+      - name: Build Full Tool Image
+        run: |
+          TAG="${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:f+b+a-${{ env.VERSION }}"
+          docker build \
+            --target full_tool \
+            -t $TAG .
+          docker push $TAG
