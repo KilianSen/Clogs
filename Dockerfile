@@ -8,7 +8,7 @@
 # ==========================================
 # 1. BUILD STAGES
 # ==========================================
-FROM node:18 as frontend_builder
+FROM node:24 as frontend_builder
 WORKDIR /app
 COPY frontend/ .
 # RUN npm install

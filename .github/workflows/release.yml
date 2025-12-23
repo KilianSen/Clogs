@@ -21,7 +21,6 @@ on:
 
 env:
   REGISTRY: ghcr.io
-  # Replace with your actual image name (e.g., username/toolname)
   IMAGE_NAME: ${{ github.repository }}
 
 jobs:
@@ -99,8 +98,19 @@ jobs:
             VERSION=${GITHUB_REF#refs/tags/}
             VERSION=${VERSION#v}
             echo "VERSION=$VERSION" >> $GITHUB_ENV
+            
+            # Check if it looks like semver X.Y.Z
+            if [[ $VERSION =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+                IFS='.' read -r -a parts <<< "$VERSION"
+                MAJOR="${parts[0]}"
+                MINOR="${parts[1]}"
+                echo "TAG_SUFFIXES=$VERSION $MAJOR.$MINOR $MAJOR latest" >> $GITHUB_ENV
+            else
+                echo "TAG_SUFFIXES=$VERSION latest" >> $GITHUB_ENV
+            fi
           else
             echo "VERSION=latest" >> $GITHUB_ENV
+            echo "TAG_SUFFIXES=latest" >> $GITHUB_ENV
           fi
 
       # 6. Log in to the Container Registry
@@ -114,62 +124,90 @@ jobs:
       # 7. Build and Push: Frontend Only (f)
       - name: Build Frontend Image
         run: |
-          TAG="${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:f-${{ env.VERSION }}"
-          docker build \
-            --target frontend_only \
-            -t $TAG .
-          docker push $TAG
+          TAG_ARGS=""
+          for suffix in ${{ env.TAG_SUFFIXES }}; do
+            TAG_ARGS="$TAG_ARGS -t ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:f-$suffix"
+          done
+          docker build --target frontend_only $TAG_ARGS .
+          
+          for suffix in ${{ env.TAG_SUFFIXES }}; do
+            docker push "${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:f-$suffix"
+          done
 
       # 8. Build and Push: Backend Only (b)
       - name: Build Backend Image
         run: |
-          TAG="${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:b-${{ env.VERSION }}"
-          docker build \
-            --target backend_only \
-            -t $TAG .
-          docker push $TAG
+          TAG_ARGS=""
+          for suffix in ${{ env.TAG_SUFFIXES }}; do
+            TAG_ARGS="$TAG_ARGS -t ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:b-$suffix"
+          done
+          docker build --target backend_only $TAG_ARGS .
+          
+          for suffix in ${{ env.TAG_SUFFIXES }}; do
+            docker push "${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:b-$suffix"
+          done
 
       # 9. Build and Push: Agents Only (a)
       - name: Build Agents Image
         run: |
-          TAG="${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:a-${{ env.VERSION }}"
-          docker build \
-            --target agents_only \
-            -t $TAG .
-          docker push $TAG
+          TAG_ARGS=""
+          for suffix in ${{ env.TAG_SUFFIXES }}; do
+            TAG_ARGS="$TAG_ARGS -t ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:a-$suffix"
+          done
+          docker build --target agents_only $TAG_ARGS .
+          
+          for suffix in ${{ env.TAG_SUFFIXES }}; do
+            docker push "${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:a-$suffix"
+          done
 
-      # 10. Build and Push: Frontend + Backend (f+b)
+      # 10. Build and Push: Frontend + Backend (f-b)
       - name: Build Frontend+Backend Image
         run: |
-          TAG="${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:f-b-${{ env.VERSION }}"
-          docker build \
-            --target frontend_backend \
-            -t $TAG .
-          docker push $TAG
+          TAG_ARGS=""
+          for suffix in ${{ env.TAG_SUFFIXES }}; do
+            TAG_ARGS="$TAG_ARGS -t ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:f-b-$suffix"
+          done
+          docker build --target frontend_backend $TAG_ARGS .
+          
+          for suffix in ${{ env.TAG_SUFFIXES }}; do
+            docker push "${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:f-b-$suffix"
+          done
 
-      # 11. Build and Push: Frontend + Agents (f+a)
+      # 11. Build and Push: Frontend + Agents (f-a)
       - name: Build Frontend+Agents Image
         run: |
-          TAG="${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:f-a-${{ env.VERSION }}"
-          docker build \
-            --target frontend_agents \
-            -t $TAG .
-          docker push $TAG
+          TAG_ARGS=""
+          for suffix in ${{ env.TAG_SUFFIXES }}; do
+            TAG_ARGS="$TAG_ARGS -t ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:f-a-$suffix"
+          done
+          docker build --target frontend_agents $TAG_ARGS .
+          
+          for suffix in ${{ env.TAG_SUFFIXES }}; do
+            docker push "${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:f-a-$suffix"
+          done
 
-      # 12. Build and Push: Backend + Agents (b+a)
+      # 12. Build and Push: Backend + Agents (b-a)
       - name: Build Backend+Agents Image
         run: |
-          TAG="${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:b-a-${{ env.VERSION }}"
-          docker build \
-            --target backend_agents \
-            -t $TAG .
-          docker push $TAG
+          TAG_ARGS=""
+          for suffix in ${{ env.TAG_SUFFIXES }}; do
+            TAG_ARGS="$TAG_ARGS -t ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:b-a-$suffix"
+          done
+          docker build --target backend_agents $TAG_ARGS .
+          
+          for suffix in ${{ env.TAG_SUFFIXES }}; do
+            docker push "${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:b-a-$suffix"
+          done
 
-      # 13. Build and Push: Full Tool (f+b+a)
+      # 13. Build and Push: Full Tool (f-b-a)
       - name: Build Full Tool Image
         run: |
-          TAG="${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:f-b-a-${{ env.VERSION }}"
-          docker build \
-            --target full_tool \
-            -t $TAG .
-          docker push $TAG
+          TAG_ARGS=""
+          for suffix in ${{ env.TAG_SUFFIXES }}; do
+            TAG_ARGS="$TAG_ARGS -t ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:f-b-a-$suffix"
+          done
+          docker build --target full_tool $TAG_ARGS .
+          
+          for suffix in ${{ env.TAG_SUFFIXES }}; do
+            docker push "${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:f-b-a-$suffix"
+          done
