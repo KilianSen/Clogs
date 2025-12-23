@@ -33,3 +33,14 @@ You can deploy multiple Clogs Agents as part of different stacks, to monitor spe
 
 #### Only External Agent
 You can also deploy only the Clogs Agent externally, to monitor specific containers in a stack, and ship logs/metrics to a central Clogs Backend.
+
+## Licensing
+
+When using Clogs, please be aware of the following licensing options:
+
+- [LICENSE](LICENSE) - AGPL-3.0 (community edition)
+- [Commercial](LICENSE-COMMERCIAL.md) - Enterprise/SaaS licensing
+- [CLA](CLA.md) - Required for contributions
+
+For just most use-cases, the AGPL-3.0 community edition will be sufficient. 
+However, if you require a commercial license without AGPL obligations, please create an Issue in the respective repository to get in contact for commercial licensing options.
