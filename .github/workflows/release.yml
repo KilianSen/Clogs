@@ -141,7 +141,7 @@ jobs:
       # 10. Build and Push: Frontend + Backend (f+b)
       - name: Build Frontend+Backend Image
         run: |
-          TAG="${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:f+b-${{ env.VERSION }}"
+          TAG="${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:f-b-${{ env.VERSION }}"
           docker build \
             --target frontend_backend \
             -t $TAG .
@@ -150,7 +150,7 @@ jobs:
       # 11. Build and Push: Frontend + Agents (f+a)
       - name: Build Frontend+Agents Image
         run: |
-          TAG="${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:f+a-${{ env.VERSION }}"
+          TAG="${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:f-a-${{ env.VERSION }}"
           docker build \
             --target frontend_agents \
             -t $TAG .
@@ -159,7 +159,7 @@ jobs:
       # 12. Build and Push: Backend + Agents (b+a)
       - name: Build Backend+Agents Image
         run: |
-          TAG="${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:b+a-${{ env.VERSION }}"
+          TAG="${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:b-a-${{ env.VERSION }}"
           docker build \
             --target backend_agents \
             -t $TAG .
@@ -168,7 +168,7 @@ jobs:
       # 13. Build and Push: Full Tool (f+b+a)
       - name: Build Full Tool Image
         run: |
-          TAG="${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:f+b+a-${{ env.VERSION }}"
+          TAG="${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:f-b-a-${{ env.VERSION }}"
           docker build \
             --target full_tool \
             -t $TAG .
