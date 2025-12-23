@@ -3,9 +3,9 @@ A lightweight toolset to provide visibility into container/stack logs, and their
 An alternative to traditional status pages, with deeper insights into your container logs.
 
 Clogs is a stack of tools, consisting of:
-- [Clogs Agent](https://github.com/kiliansen/clogs-agent/) - A lightweight service that sources logs/metrics from your containers, and ships them to the Clogs Backend for processing and visualization.
-- [Clogs Server](.) - A backend service that receives logs/metrics from the Clogs Agent, processes them, and provides an API for the Clogs Frontend.
-- [Clogs Frontend](https://github.com/kiliansen/clogs-frontend) - A web-based dashboard that visualizes the logs/metrics received from the Clogs Backend.
+- [Clogs Agent](https://github.com/kiliansen/clogsagent/) - A lightweight service that sources logs/metrics from your containers, and ships them to the Clogs Backend for processing and visualization.
+- [Clogs Server](https://github.com/kiliansen/clogsserver) - A backend service that receives logs/metrics from the Clogs Agent, processes them, and provides an API for the Clogs Frontend.
+- [Clogs Frontend](https://github.com/kiliansen/clogsweb) - A web-based dashboard that visualizes the logs/metrics received from the Clogs Backend.
 
 ## Deployment Options
 Clogs can be deployed in multiple ways, depending on your needs. You can choose to deploy the Clogs Agent standalone, or as part of a compose stack. You can also choose to deploy multiple Clogs Agents, to monitor specific containers only, and ship logs/metrics to a central Clogs Backend.
