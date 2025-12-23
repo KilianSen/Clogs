@@ -39,5 +39,5 @@ jobs:
             
             This PR updates the pinned versions of Frontend, Backend, and Agents to their latest releases/tags.
           branch: update-versions
-          base: main
+          base: master
           delete-branch: true
