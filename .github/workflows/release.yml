@@ -40,6 +40,9 @@ jobs:
       - name: Determine Versions
         id: versions
         run: |
+          # Ensure IMAGE_NAME is lowercase
+          echo "IMAGE_NAME=$(echo "${{ env.IMAGE_NAME }}" | tr '[:upper:]' '[:lower:]')" >> $GITHUB_ENV
+
           # Load defaults from file
           if [ -f versions.env ]; then
             # Read the file line by line to avoid issues with source on some shells
@@ -49,7 +52,7 @@ jobs:
               fi
             done < versions.env
           fi
-          
+
           # Override with inputs if provided (workflow_dispatch)
           if [ -n "${{ inputs.frontend_version }}" ]; then
             echo "FRONTEND_VERSION=${{ inputs.frontend_version }}" >> $GITHUB_ENV
