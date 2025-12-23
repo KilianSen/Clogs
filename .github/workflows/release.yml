@@ -27,13 +27,15 @@ jobs:
   build-and-push:
     runs-on: ubuntu-latest
     permissions:
-      contents: read
+      contents: write
       packages: write
 
     steps:
       # 1. Checkout the Main Repo (contains the Dockerfile)
       - name: Checkout Main Repo (Dockerfile)
         uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
 
       # 1.1 Determine Versions
       - name: Determine Versions
@@ -91,26 +93,33 @@ jobs:
           token: ${{ secrets.GITHUB_TOKEN }}
 
       # 5. Extract Version
-      - name: Extract Version
-        id: version
+      - name: Determine Version
+        id: semantic
+        uses: paulhatch/semantic-version@v5.4.0
+        with:
+          tag_prefix: "v"
+          major_pattern: "(MAJOR)"
+          minor_pattern: "(feat)"
+          version_format: "${major}.${minor}.${patch}"
+          bump_each_commit: true
+          tag_and_push: ${{ github.ref == 'refs/heads/master' || github.event_name == 'workflow_dispatch' }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Process Version
+        id: version_proc
         run: |
-          if [[ $GITHUB_REF == refs/tags/* ]]; then
-            VERSION=${GITHUB_REF#refs/tags/}
-            VERSION=${VERSION#v}
-            echo "VERSION=$VERSION" >> $GITHUB_ENV
-            
-            # Check if it looks like semver X.Y.Z
-            if [[ $VERSION =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
-                IFS='.' read -r -a parts <<< "$VERSION"
-                MAJOR="${parts[0]}"
-                MINOR="${parts[1]}"
-                echo "TAG_SUFFIXES=$VERSION $MAJOR.$MINOR $MAJOR latest" >> $GITHUB_ENV
-            else
-                echo "TAG_SUFFIXES=$VERSION latest" >> $GITHUB_ENV
-            fi
+          VERSION="${{ steps.semantic.outputs.version }}"
+          echo "VERSION=$VERSION" >> $GITHUB_ENV
+          
+          # Check if it looks like semver X.Y.Z
+          if [[ $VERSION =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+              IFS='.' read -r -a parts <<< "$VERSION"
+              MAJOR="${parts[0]}"
+              MINOR="${parts[1]}"
+              echo "TAG_SUFFIXES=$VERSION $MAJOR.$MINOR $MAJOR latest" >> $GITHUB_ENV
           else
-            echo "VERSION=latest" >> $GITHUB_ENV
-            echo "TAG_SUFFIXES=latest" >> $GITHUB_ENV
+              echo "TAG_SUFFIXES=$VERSION latest" >> $GITHUB_ENV
           fi
 
       # 6. Log in to the Container Registry
@@ -203,11 +212,18 @@ jobs:
       - name: Build Full Tool Image
         run: |
           TAG_ARGS=""
+          # Prefixed tags
           for suffix in ${{ env.TAG_SUFFIXES }}; do
             TAG_ARGS="$TAG_ARGS -t ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:f-b-a-$suffix"
           done
+          # Root tags (synonyms)
+          for suffix in ${{ env.TAG_SUFFIXES }}; do
+            TAG_ARGS="$TAG_ARGS -t ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:$suffix"
+          done
+          
           docker build --target full_tool $TAG_ARGS .
           
           for suffix in ${{ env.TAG_SUFFIXES }}; do
             docker push "${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:f-b-a-$suffix"
+            docker push "${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:$suffix"
           done
