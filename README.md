@@ -7,32 +7,14 @@ Clogs is a stack of tools, consisting of:
 - [Clogs Server](https://github.com/kiliansen/clogsserver) - A backend service that receives logs/metrics from the Clogs Agent, processes them, and provides an API for the Clogs Frontend.
 - [Clogs Frontend](https://github.com/kiliansen/clogsweb) - A web-based dashboard that visualizes the logs/metrics received from the Clogs Backend.
 
-## Deployment Options
-Clogs can be deployed in multiple ways, depending on your needs. You can choose to deploy the Clogs Agent standalone, or as part of a compose stack. You can also choose to deploy multiple Clogs Agents, to monitor specific containers only, and ship logs/metrics to a central Clogs Backend.
+# Deploy (Simple)
+To quickly deploy Clogs use the fully integrated Docker Image:
+```bash
+docker run -d -p 5173:5173 -p 8000:8000 -v /var/run/docker.sock:/var/run/docker.sock:ro ghcr.io/kiliansen/clogs:latest
+```
 
-### Standalone Deployment
-
-#### Integrated Agent
-The easiest way to deploy Clogs is to deploy standalone on a host.
-
-By default, an integrated Clogs Agent will monitor all containers on the host, and ship logs/metrics to the Clogs Backend, and visualize them in the Clogs Frontend.
-
-#### Multiple Agents
-Alternatively, you can deploy multiple Clogs Agents on the same/different hosts, to monitor specific containers only, and ship logs/metrics to a central Clogs Backend.
-
-#### Only External Agent
-You can also deploy only the Clogs Agent externally, to monitor specific containers on a host, and ship logs/metrics to a central Clogs Backend.
-
-### Stack Deployment
-
-#### Integrated Agent
-You can also deploy Clogs as part of a compose stack. In this mode, the integrated Clogs Agent can automatically discover other containers in the same stack, and start monitoring their logs/metrics.
-
-#### Multiple Agents
-You can deploy multiple Clogs Agents as part of different stacks, to monitor specific containers only, and ship logs/metrics to a central Clogs Backend.
-
-#### Only External Agent
-You can also deploy only the Clogs Agent externally, to monitor specific containers in a stack, and ship logs/metrics to a central Clogs Backend.
+Web UI will be available at `http://localhost:5173`.
+Agents can be configured to point to the server at `http://<host-ip>:8000`.
 
 ## Licensing
 
