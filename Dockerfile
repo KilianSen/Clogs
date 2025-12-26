@@ -11,19 +11,21 @@
 FROM node:24 as frontend_builder
 WORKDIR /app
 COPY frontend/ .
-# RUN npm install
+RUN npm install
 
 FROM python:3.14 as backend_builder
 WORKDIR /app
 COPY backend/ .
 # Install deps, etc.
-RUN pip install -r requirements.txt
+RUN python -m venv venv
+RUN venv/bin/pip install -r requirements.txt
 
 FROM python:3.14 as agents_builder
 WORKDIR /app
 COPY agents/ .
 # Install deps, etc.
-RUN pip install -r requirements.txt
+RUN python -m venv venv
+RUN venv/bin/pip install -r requirements.txt
 
 # ==========================================
 # 2. OUTPUT STAGES
@@ -34,13 +36,13 @@ FROM python:3.14-slim as backend_only
 WORKDIR /app
 COPY --from=backend_builder /app /app
 # Native entrypoint for just the backend
-ENTRYPOINT ["python", "main.py"]
+ENTRYPOINT ["/app/venv/bin/python", "main.py"]
 
 # --- IMAGE 2: Agents Only ---
 FROM python:3.14-slim as agents_only
 WORKDIR /app
 COPY --from=agents_builder /app /app
-ENTRYPOINT ["python", "main.py"]
+ENTRYPOINT ["/app/venv/bin/python", "main.py"]
 
 # --- IMAGE 3: Frontend Only ---
 FROM node:24-slim as frontend_only
