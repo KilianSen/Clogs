@@ -69,7 +69,7 @@ ENTRYPOINT ["/usr/bin/supervisord"]
 # --- IMAGE 5: Frontend + Backend ---
 FROM python:3.14-slim as frontend_backend
 RUN apt-get update && apt-get install -y curl \
-    && curl -fsSL https://deb.nodesource.com/setup_18.x | bash - \
+    && curl -fsSL https://deb.nodesource.com/setup_22.x | bash - \
     && apt-get install -y nodejs supervisor
 
 COPY --from=frontend_builder /app /frontend
@@ -86,7 +86,7 @@ ENTRYPOINT ["/usr/bin/supervisord"]
 # --- IMAGE 6: Frontend + Agents ---
 FROM python:3.14-slim as frontend_agents
 RUN apt-get update && apt-get install -y curl \
-    && curl -fsSL https://deb.nodesource.com/setup_18.x | bash - \
+    && curl -fsSL https://deb.nodesource.com/setup_22.x | bash - \
     && apt-get install -y nodejs supervisor
 
 COPY --from=frontend_builder /app /frontend
@@ -103,7 +103,7 @@ ENTRYPOINT ["/usr/bin/supervisord"]
 # --- IMAGE 7: Full Tool (Frontend + Backend + Agents) ---
 FROM python:3.14-slim as full_tool
 RUN apt-get update && apt-get install -y curl \
-    && curl -fsSL https://deb.nodesource.com/setup_18.x | bash - \
+    && curl -fsSL https://deb.nodesource.com/setup_22.x | bash - \
     && apt-get install -y nodejs supervisor nginx
 
 COPY --from=frontend_builder /app /frontend
