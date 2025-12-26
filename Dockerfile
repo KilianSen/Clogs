@@ -17,11 +17,13 @@ FROM python:3.14 as backend_builder
 WORKDIR /app
 COPY backend/ .
 # Install deps, etc.
+RUN pip install -r requirements.txt
 
 FROM python:3.14 as agents_builder
 WORKDIR /app
 COPY agents/ .
-# go build...
+# Install deps, etc.
+RUN pip install -r requirements.txt
 
 # ==========================================
 # 2. OUTPUT STAGES
