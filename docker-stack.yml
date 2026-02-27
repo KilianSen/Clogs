@@ -44,9 +44,9 @@ services:
         order: start-first
       resources:
         limits:
-          memory: 512M
+          memory: 1G
         reservations:
-          memory: 256M
+          memory: 512M
 
   web:
     image: ghcr.io/kiliansen/clogs-web:${FRONTEND_VERSION:-latest}
@@ -72,9 +72,9 @@ services:
         order: start-first
       resources:
         limits:
-          memory: 256M
+          memory: 1G
         reservations:
-          memory: 128M
+          memory: 512M
 
 networks:
   clogs-network:
