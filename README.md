@@ -16,6 +16,32 @@ docker run -d -p 5173:5173 -p 8000:8000 -v /var/run/docker.sock:/var/run/docker.
 Web UI will be available at `http://localhost:5173`.
 Agents can be configured to point to the server at `http://<host-ip>:8000`.
 
+# Deploy (Docker Swarm)
+
+Clogs is optimized for Docker Swarm deployment, allowing for easy horizontal scaling and high availability. To deploy to a swarm cluster:
+
+1.  **Initialize Swarm** (if not already):
+    ```bash
+    docker swarm init
+    ```
+
+2.  **Deploy the Stack**:
+    You can use the provided script to load versions and deploy:
+    ```bash
+    ./scripts/deploy_swarm.sh
+    ```
+    Alternatively, manual deployment:
+    ```bash
+    export $(grep -v '^#' versions.env | xargs) && docker stack deploy -c docker-stack.yml clogs
+    ```
+
+This will deploy:
+-   **Agent**: A global service running on every node, monitoring local containers.
+-   **Server**: Replicated backend service (2 replicas by default).
+-   **Web**: Replicated frontend dashboard (2 replicas by default).
+
+The dashboard will be accessible via port `8080`.
+
 ## Licensing
 
 When using Clogs, please be aware of the following licensing options:
